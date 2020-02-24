@@ -10,7 +10,7 @@ a wrapper to the C++ code, such that it can be imported as a Python function.
 Make sure numpy and matplotlib are installed, then clone this repository somewhere on your python path.
 
 ```
-git clone https://github.com/jeanlucshaw/barnes
+git clone https://github.com/jeanlucshaw/barnes.git
 ```
 
 The python setup script is meant to be called from Makefile. In the same directory, type:
