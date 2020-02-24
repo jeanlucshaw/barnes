@@ -1,10 +1,15 @@
+"""
+Python front end to the C++ libraries
+"""
 import ctypes
+from os import getcwd
 import numpy as np
 from numpy.ctypeslib import ndpointer
-from os import getcwd
 
-# Functions
 def array_2_pp(array):
+    """
+    Create a C type access to the input 2D numpy array.
+    """
     pp = (array.__array_interface__['data'][0]
           + np.arange(array.shape[0])
           * array.strides[0]).astype(np.uintp)
@@ -20,9 +25,40 @@ def barnes(x_scatter,
            yr=1.,
            iters=1,
            gamma=0.5):
+    """
+    Barnes interpolation of scattered data
 
+    Wrapper to the C++ interpolation routine found in the Gri
+    software.
+
+    Mandatory inputs are:
+
+    x_scatter:    [1D numpy array], x coordinate of scattered data
+    y_scatter:    [1D numpy array], y coordinate of scattered data
+    z_scatter:    [1D numpy array], scattered data
+    x_grid:       [1D numpy array], x coordinate of interpolation grid
+    y_grid:       [1D numpy array], y coordinate of interpolation grid
+
+    Optional inputs are:
+
+    xr:       [float], horizontal search radius, default 1.
+    yr:       [float], vertical search radius, default 1.
+    iters:    [int], number of iterations, default 1
+    gamma:    [float], convergence parameter, default 0.5
+
+    Authors:
+
+    C++: Dan Kelley
+    Python: Jean-Luc Shaw
+
+    Reference:
+
+    Koch, Desjardins, and Kocin (1983),
+    An interactive Barnes objective map analysis scheme
+    for use with satellite and conventional data,
+    J. Clim. Appl. Meteorol, 22, 1487-1503
+    """
     # Load library
-    # _dll = ctypes.CDLL(getcwd() + '/build/lib.linux-x86_64-3.7/barneslib.cpython-37m-x86_64-linux-gnu.so')
     _dll = ctypes.CDLL(getcwd() + '/shared/barneslib.so')
 
     # Info from input
