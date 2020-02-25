@@ -54,7 +54,7 @@ z_grid = barnes(x_scatter,
 ```
 
 Optional parameters are the horizontal and vertical search radius values (xr, yr) defaulting to 1., the gamma parameter defaulting
-to 0.5 and the number of iterations defaulting to 2.
+to 0.5 and the number of iterations defaulting to 1.
 
 # References
 
