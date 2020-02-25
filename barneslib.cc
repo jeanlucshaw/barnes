@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <vector>
-
+#include <limits>
 
 // Interpolate in box f2 f3 f0 f1 using f = f0 + f1'x + f2'y +f3'xy, where
 // ()' means () - f0, and x = xx - x_at_f0, etc.
@@ -27,14 +27,14 @@ extern "C" bool value_i_j(unsigned int ii,
 	// Fiddle with dx,dy,Dx,Dy, to avoid looking past array
 	dx = (ii == xsize - 1 ? 0.0 : xx - xmatrix[ii]);
 	dy = (jj == ysize - 1 ? 0.0 : yy - ymatrix[jj]);
-	// if (_legit_xy(ii, jj) == false
-	//     || (dx != 0.0 && _legit_xy(ii + 1, jj) == false)
-	//     || (dy != 0.0 && _legit_xy(ii, jj + 1) == false)
-	//     || (dx != 0.0 && dy != 0.0 && _legit_xy(ii + 1, jj + 1) == false)) {
-	// 	*value = gr_currentmissingvalue();
-	// 	return false;
-	// }
-	f0 = zmatrix[ii][jj];
+	if (isnan(zmatrix[jj][ii]) == true
+	    || (dx != 0.0 && isnan(zmatrix[jj][ii + 1]) == true)
+	    || (dy != 0.0 && isnan(zmatrix[jj + 1][ii]) == true)
+	    || (dx != 0.0 && dy != 0.0 && isnan(zmatrix[jj + 1][ii + 1]) == true)) {
+          *value = std::numeric_limits<double>::quiet_NaN();
+          return false;
+	}
+	f0 = zmatrix[jj][ii];
 	f1 = dx != 0 ? zmatrix[jj][ii + 1] - f0 : 0.0;
 	f2 = dy != 0 ? zmatrix[jj + 1][ii] - f0 : 0.0;
 	f3 = (dx != 0 && dy != 0) ? zmatrix[jj + 1][ii + 1] - f0 - f1 - f2 : 0;
@@ -118,8 +118,8 @@ extern "C" double interpolate_barnes(double xx,
                                      double xr,
                                      double yr)
 {
-	// if (gr_missing(zz))
-	// 	return zz;
+	if (isnan(zz))
+		return zz;
 	double sum = 0.0, sum_w = 0.0;
 	for (int k = 0; k < n_k; k++) {
 		double w;
@@ -132,11 +132,13 @@ extern "C" double interpolate_barnes(double xx,
                 sum += w * (z[k] - z_last[k]);
                 sum_w += w;
 	}
-	if (sum_w > 0.0)
+        // printf("%f\n", sum_w);
+	if (sum_w > 0.0) {
           return (zz + sum / sum_w);
-	else
-          return 0.0;
+	} else {
+          return std::numeric_limits<double>::quiet_NaN();
           // return gr_currentmissingvalue();
+        }
 }
 
 //`convert columns to grid barnes    [.xr. .yr. .gamma. .iter.]'
@@ -176,16 +178,16 @@ extern "C" bool create_grid_barnes(double xr,
           // size_t i, j;
           for (unsigned int i = 0; i < xsize; i++) {
             for (unsigned int j = 0; j < ysize; j++) {
-                          zmatrix[j][i] = interpolate_barnes(xmatrix[i],
-                                                             ymatrix[j],
-                                                             zmatrix[j][i],
-                                                             numgood,
-                                                             xgood,
-                                                             ygood,
-                                                             zgood,
-                                                             z_last,
-                                                             xr2,
-                                                             yr2);
+              zmatrix[j][i] = interpolate_barnes(xmatrix[i],
+                                                 ymatrix[j],
+                                                 zmatrix[j][i],
+                                                 numgood,
+                                                 xgood,
+                                                 ygood,
+                                                 zgood,
+                                                 z_last,
+                                                 xr2,
+                                                 yr2);
 			}
 			// if (!warned) {
 			// 	double frac = (iteration + 1.) * (i + 1.) * (j + 1.);
@@ -201,28 +203,27 @@ extern "C" bool create_grid_barnes(double xr,
 			bool in_x = nearest(xgood[k], xmatrix, xsize, &ix, &fx);
 			bool in_y = nearest(ygood[k], ymatrix, ysize, &iy, &fy);
 			if (in_x && in_y) {
-				value_i_j(ix,
-                                          iy,
-                                          xgood[k],
-                                          ygood[k],
-                                          &z_last2[k],
-                                          xsize,
-                                          ysize,
-                                          xmatrix,
-                                          ymatrix,
-                                          zmatrix);
+                          value_i_j(ix,
+                                    iy,
+                                    xgood[k],
+                                    ygood[k],
+                                    &z_last2[k],
+                                    xsize,
+                                    ysize,
+                                    xmatrix,
+                                    ymatrix,
+                                    zmatrix);
 			} else {
-				z_last2[k]
-					= interpolate_barnes(xgood[k],
-							     ygood[k],
-							     z_last[k],
-							     numgood,
-							     xgood,
-							     ygood,
-							     zgood,
-							     z_last,
-							     xr2,
-							     yr2);
+                          z_last2[k]= interpolate_barnes(xgood[k],
+                                                         ygood[k],
+                                                         z_last[k],
+                                                         numgood,
+                                                         xgood,
+                                                         ygood,
+                                                         zgood,
+                                                         z_last,
+                                                         xr2,
+                                                         yr2);
 			}
 		}
 		// Calculate change in grid
