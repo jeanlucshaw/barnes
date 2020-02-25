@@ -2,7 +2,7 @@
 Python front end to the C++ libraries
 """
 import ctypes
-from os import getcwd
+from os.path import dirname, abspath
 import numpy as np
 from numpy.ctypeslib import ndpointer
 
@@ -59,7 +59,8 @@ def barnes(x_scatter,
     J. Clim. Appl. Meteorol, 22, 1487-1503
     """
     # Load library
-    _dll = ctypes.CDLL(getcwd() + '/shared/barneslib.so')
+    file_path = dirname(abspath(__file__))
+    _dll = ctypes.CDLL(file_path + '/shared/barneslib.so')
 
     # Info from input
     x_size, y_size = x_coord.size, y_coord.size
